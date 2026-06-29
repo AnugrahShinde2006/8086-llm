@@ -1,0 +1,25 @@
+# Environments
+venv/
+.env
+
+# PyTorch and Weights
+*.pt
+*.pth
+*.ckpt
+backend/model_latest.pt
+
+# Data (Ignore large text files but keep synthetic generation scripts)
+backend/data/raw/*.txt
+backend/data/raw/pdfs/
+
+# Python caching
+__pycache__/
+*.pyc
+
+# Node modules
+frontend/node_modules/
+frontend/dist/
+
+# OS generated files
+.DS_Store
+Thumbs.db

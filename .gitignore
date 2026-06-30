@@ -6,7 +6,9 @@ venv/
 *.pt
 *.pth
 *.ckpt
+*.safetensors
 backend/model_latest.pt
+backend/hf_version/adapters/
 
 # Data (Ignore large text files but keep synthetic generation scripts)
 backend/data/raw/*.txt

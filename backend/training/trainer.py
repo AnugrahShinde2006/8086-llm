@@ -28,7 +28,8 @@ def train():
         d_model=384,
         n_heads=6,
         n_layers=6,
-        device="cuda" if torch.cuda.is_available() else "cpu"
+        # device="cuda" if torch.cuda.is_available() else "cpu"
+        device="cuda"
     )
     
     # Dataloader

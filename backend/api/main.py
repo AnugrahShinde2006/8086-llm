@@ -6,7 +6,7 @@ import os
 
 # Add parent directory to path to allow relative imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from inference.generator import Generator
+from hf_version.hf_generator import HFGenerator
 
 app = FastAPI(title="8086 LLM API")
 
@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 # Initialize generator globally
-generator = Generator(model_path="backend/checkpoints/model_latest.pt", vocab_path="backend/checkpoints/vocab.json")
+generator = HFGenerator()
 
 class GenerateRequest(BaseModel):
     prompt: str
@@ -29,26 +29,16 @@ class GenerateRequest(BaseModel):
 
 @app.post("/generate")
 def generate_text(req: GenerateRequest):
-    # Formulate the prompt with special tokens
-    full_prompt = f"<|user|>\n{req.prompt}\n<|assistant|>\n"
-    response = generator.generate(full_prompt, req.max_tokens, req.temperature, req.top_k)
-    
-    # Extract only the assistant part
-    try:
-        assistant_reply = response.split("<|assistant|>\n")[1].split("<|endoftext|>")[0].strip()
-    except Exception as e:
-        assistant_reply = response
-        
-    return {"reply": assistant_reply}
+    # The HFGenerator internally formats the prompt and strips the <|assistant|> tags
+    response = generator.generate(req.prompt, max_new_tokens=req.max_tokens, temperature=req.temperature, top_k=req.top_k)
+    return {"reply": response}
 
 @app.get("/stats")
 def get_stats():
     return {
-        "vocab_size": generator.tokenizer.get_vocab_size(),
-        "d_model": generator.config.d_model,
-        "n_layers": generator.config.n_layers,
-        "n_heads": generator.config.n_heads,
-        "device": generator.config.device
+        "model": generator.base_model_id,
+        "type": "Hugging Face (QLoRA 4-bit)",
+        "device": str(generator.model.device)
     }
 
 if __name__ == "__main__":

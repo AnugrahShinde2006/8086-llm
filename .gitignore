@@ -7,8 +7,10 @@ venv/
 *.pth
 *.ckpt
 *.safetensors
+*.gguf
 backend/model_latest.pt
 backend/hf_version/adapters/
+backend/ollama/llama.cpp/
 
 # Data (Ignore large text files but keep synthetic generation scripts)
 backend/data/raw/*.txt

@@ -57,7 +57,7 @@ export default function App() {
       const res = await fetch('http://localhost:8000/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userMsg.content, max_tokens: 100 })
+        body: JSON.stringify({ prompt: userMsg.content, max_tokens: 1024 })
       });
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
@@ -90,24 +90,16 @@ export default function App() {
           <div className="stats-card">
             <h3>Model Stats</h3>
             <div className="stat-row">
-              <span>Vocab Size</span>
-              <span className="stat-value">{stats.vocab_size}</span>
+              <span>Model</span>
+              <span className="stat-value">{stats.model}</span>
             </div>
             <div className="stat-row">
-              <span>d_model</span>
-              <span className="stat-value">{stats.d_model}</span>
-            </div>
-            <div className="stat-row">
-              <span>Layers</span>
-              <span className="stat-value">{stats.n_layers}</span>
-            </div>
-            <div className="stat-row">
-              <span>Heads</span>
-              <span className="stat-value">{stats.n_heads}</span>
+              <span>Type</span>
+              <span className="stat-value">{stats.type}</span>
             </div>
             <div className="stat-row" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem' }}>
               <span>Device</span>
-              <span className="stat-value" style={{ color: '#34d399' }}>{stats.device.toUpperCase()}</span>
+              <span className="stat-value" style={{ color: '#34d399' }}>{stats.device}</span>
             </div>
           </div>
         )}

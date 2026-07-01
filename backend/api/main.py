@@ -6,7 +6,9 @@ import os
 
 # Add parent directory to path to allow relative imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from hf_version.hf_generator import HFGenerator
+
+import urllib.request
+import json
 
 app = FastAPI(title="8086 LLM API")
 
@@ -18,27 +20,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize generator globally
-generator = HFGenerator()
+# No need to initialize a global generator! Ollama handles it.
 
 class GenerateRequest(BaseModel):
     prompt: str
-    max_tokens: int = 50
-    temperature: float = 0.8
-    top_k: int = 10
+    max_tokens: int = 1024  # Increased from 50 to allow full, detailed answers
+    temperature: float = 0.7
+    top_k: int = 50
 
 @app.post("/generate")
 def generate_text(req: GenerateRequest):
-    # The HFGenerator internally formats the prompt and strips the <|assistant|> tags
-    response = generator.generate(req.prompt, max_new_tokens=req.max_tokens, temperature=req.temperature, top_k=req.top_k)
-    return {"reply": response}
+    url = "http://localhost:11434/api/generate"
+    data = json.dumps({
+        "model": "8086-llm",
+        "prompt": req.prompt,
+        "stream": False,
+        "options": {
+            "temperature": req.temperature,
+            "top_k": req.top_k,
+            "num_predict": req.max_tokens
+        }
+    }).encode("utf-8")
+    
+    req_obj = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+    
+    try:
+        with urllib.request.urlopen(req_obj) as response:
+            result = json.loads(response.read().decode())
+            return {"reply": result.get("response", "")}
+    except Exception as e:
+        return {"reply": f"Error communicating with Ollama: {str(e)}\nMake sure Ollama is running and you ran 'ollama create 8086-llm -f backend/ollama/Modelfile'!"}
 
 @app.get("/stats")
 def get_stats():
     return {
-        "model": generator.base_model_id,
-        "type": "Hugging Face (QLoRA 4-bit)",
-        "device": str(generator.model.device)
+        "model": "qwen2.5:7b + 8086 LoRA",
+        "type": "Ollama (GGUF 4-bit)",
+        "device": "Auto-Offloaded (CPU/GPU)"
     }
 
 if __name__ == "__main__":

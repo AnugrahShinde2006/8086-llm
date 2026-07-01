@@ -4,25 +4,27 @@ from peft import PeftModel
 
 class HFGenerator:
     def __init__(self):
-        self.base_model_id = "Qwen/Qwen2.5-3B"
+        self.base_model_id = "Qwen/Qwen2.5-7B"
         self.adapter_dir = "backend/hf_version/adapters"
         
         print("Loading Tokenizer...")
         self.tokenizer = AutoTokenizer.from_pretrained(self.adapter_dir)
         
-        # Load base model in 4-bit
+        # Load base model in 4-bit with CPU offloading enabled!
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+            bnb_4bit_compute_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+            llm_int8_enable_fp32_cpu_offload=True # Allows weights to spill into system RAM
         )
         
-        print(f"Loading Base Model ({self.base_model_id})...")
+        print(f"Loading Base Model ({self.base_model_id}) with CPU offloading...")
         base_model = AutoModelForCausalLM.from_pretrained(
             self.base_model_id,
             quantization_config=bnb_config,
-            device_map="auto"
+            device_map="auto",
+            max_memory={0: "4GiB", "cpu": "16GiB"} # Forces max 4GB on GPU, rest to CPU
         )
         
         # Load the LoRA adapter
